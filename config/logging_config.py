@@ -10,6 +10,8 @@ import json
 import logging
 import re
 import threading
+import os # Import os module
+import sys # Import sys module
 from pathlib import Path
 
 from loguru import logger
@@ -140,6 +142,15 @@ def configure_logging(
         enqueue=True,
     )
 
+    # Add stderr sink if LOG_TO_TERMINAL environment variable is set to "True"
+    if os.environ.get("LOG_TO_TERMINAL", "False").lower() == "true":
+        logger.add(
+            sys.stderr,
+            level="DEBUG", # You can make this configurable via another env var if needed
+            format=_serialize_with_context,
+            enqueue=True, # Ensure logs are non-blocking
+        )
+
     # Intercept stdlib logging: route all root logger output to loguru
     intercept = InterceptHandler()
     logging.root.handlers = [intercept]
@@ -157,3 +168,5 @@ def configure_logging(
         logging.getLogger(name).setLevel(
             logging.WARNING if not verbose_third_party else logging.NOTSET
         )
+
+
